@@ -44,15 +44,15 @@ def gen_diff_report(gt_things, ocr_things, css_prefix, joiner, none, align):
         '''.format(gtx, ocrx)
 
 
-def process(gt, ocr, report_prefix, *, metrics=True):
+def process(gt, ocr, report_prefix, *, metrics=True, gtlevel="region", ocrlevel="region"):
     """Check OCR result against GT.
 
     The @click decorators change the signature of the decorated functions, so we keep this undecorated version and use
     Click on a wrapper.
     """
 
-    gt_text = text(gt)
-    ocr_text = text(ocr)
+    gt_text = text(gt, gtlevel)
+    ocr_text = text(ocr, ocrlevel)
 
     gt_text = substitute_equivalences(gt_text)
     ocr_text = substitute_equivalences(ocr_text)
@@ -101,7 +101,9 @@ def process(gt, ocr, report_prefix, *, metrics=True):
 @click.argument('ocr', type=click.Path(exists=True))
 @click.argument('report_prefix', type=click.Path(), default='report')
 @click.option('--metrics/--no-metrics', default=True, help='Enable/disable metrics and green/red')
-def main(gt, ocr, report_prefix, metrics):
+@click.option('--gtlevel', default='region', help='Extraction level of the page-xml')
+@click.option('--ocrlevel', default='region', help='Extraction level of the page-xml')
+def main(gt, ocr, report_prefix, metrics, gtlevel, ocrlevel):
     """
     Compare the PAGE/ALTO/text document GT against the document OCR.
 
@@ -110,7 +112,7 @@ def main(gt, ocr, report_prefix, metrics):
     that case, use --no-metrics to disable the then meaningless metrics and also
     change the color scheme from green/red to blue.
     """
-    process(gt, ocr, report_prefix, metrics=metrics)
+    process(gt, ocr, report_prefix, metrics=metrics, gtlevel=gtlevel, ocrlevel=ocrlevel)
 
 
 if __name__ == '__main__':
