@@ -60,7 +60,7 @@ def page_text(tree, level="region"):
 
     def line_text(region):
         try:
-            return "\n".join(region.findall('./page:TextLine/page:TextEquiv/page:Unicode', namespaces=nsmap))
+            return "\n".join([line.text for line in (region.findall('./page:TextLine/page:TextEquiv/page:Unicode', namespaces=nsmap)) if line is not None])
         except AttributeError:
             return None
 
