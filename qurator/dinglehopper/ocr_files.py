@@ -47,24 +47,31 @@ def page_namespace(tree):
         raise ValueError('Not a PAGE tree')
 
 
-def page_text(tree, level="region"):
+def page_text(tree, level="region", index="0"):
     """Extract text from the given PAGE content ElementTree."""
 
     nsmap = {'page': page_namespace(tree)}
 
-    def region_text(region):
+    def region_text(region, index="0"):
         try:
-            return region.find('./page:TextEquiv/page:Unicode', namespaces=nsmap).text
+            reg = region.find('./page:TextEquiv/page:Unicode', namespaces=nsmap)
+            if reg is not None and reg.getparent().attrib.get('index','-1') in ['-1', index]:
+                return region.find('./page:TextEquiv/page:Unicode', namespaces=nsmap).text
+            else:
+                return None
         except AttributeError:
             return None
 
-    def line_text(region):
+    def line_text(region, index="0"):
         try:
-            return "\n".join([line.text for line in (region.findall('./page:TextLine/page:TextEquiv/page:Unicode', namespaces=nsmap)) if line is not None])
+            for line in (region.findall('./page:TextLine/page:TextEquiv/page:Unicode', namespaces=nsmap)):
+                index = line.getparent().attrib.get('index','-1')
+            return "\n".join([line.text for line in (region.findall('./page:TextLine/page:TextEquiv/page:Unicode', namespaces=nsmap))
+                              if line is not None and line.getparent().attrib.get('index','-1') in ['-1', index]])
         except AttributeError:
             return None
 
-    def word_text(region):
+    def word_text(region, index="0"):
         try:
             text = []
             textlines = []
@@ -73,7 +80,8 @@ def page_text(tree, level="region"):
                 words = line.findall('./page:TextEquiv/page:Unicode', namespaces=nsmap)
                 if words:
                     for word in words:
-                        text.append(word.text)
+                        if word.getparent().attrib.get('index','-1') in ['-1', index]:
+                            text.append(word.text)
                 elif text != []:
                     textlines.append(" ".join(text))
                     text = []
@@ -91,11 +99,11 @@ def page_text(tree, level="region"):
                     region_id = region_ref_indexed.attrib['regionRef']
                     region = tree.find('.//page:TextRegion[@id="%s"]' % region_id, namespaces=nsmap)
                     if region is not None and level == "region":
-                        region_texts.append(region_text(region))
+                        region_texts.append(region_text(region, index))
                     elif region is not None and level == "line":
-                        region_texts.append(line_text(region))
+                        region_texts.append(line_text(region, index))
                     elif region is not None and level == "word":
-                        region_texts.append(word_text(region))
+                        region_texts.append(word_text(region, index))
                     else:
                         warn('Not a TextRegion: "%s"' % region_id)
             else:
@@ -103,11 +111,11 @@ def page_text(tree, level="region"):
     else:
         for region in tree.iterfind('.//page:TextRegion', namespaces=nsmap):
             if region is not None and level == "region":
-                region_texts.append(region_text(region))
+                region_texts.append(region_text(region, index))
             elif region is not None and level == "line":
-                region_texts.append(line_text(region))
+                region_texts.append(line_text(region, index))
             elif region is not None and level == "word":
-                region_texts.append(word_text(region))
+                region_texts.append(word_text(region, index))
 
     # XXX Does a file have to have regions etc.? region vs lines etc.
     # Filter empty region texts
@@ -118,7 +126,7 @@ def page_text(tree, level="region"):
     return text_
 
 
-def text(filename, level):
+def text(filename, level="region", index="0"):
     """Read the text from the given file.
 
     Supports PAGE, ALTO and falls back to plain text.
@@ -130,7 +138,7 @@ def text(filename, level):
         with open(filename, 'r') as f:
             return f.read()
     try:
-        return page_text(tree, level=level)
+        return page_text(tree, level=level, index=index)
     except ValueError:
         return alto_text(tree)
 

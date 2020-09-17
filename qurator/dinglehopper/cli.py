@@ -44,15 +44,15 @@ def gen_diff_report(gt_things, ocr_things, css_prefix, joiner, none, align):
         '''.format(gtx, ocrx)
 
 
-def process(gt, ocr, report_prefix, *, metrics=True, gtlevel="region", ocrlevel="region"):
+def process(gt, ocr, report_prefix, *, metrics=True, gtlevel="region", ocrlevel="region", gtindex="0", ocrindex="0"):
     """Check OCR result against GT.
 
     The @click decorators change the signature of the decorated functions, so we keep this undecorated version and use
     Click on a wrapper.
     """
 
-    gt_text = text(gt, gtlevel)
-    ocr_text = text(ocr, ocrlevel)
+    gt_text = text(gt, gtlevel, gtindex)
+    ocr_text = text(ocr, ocrlevel, ocrindex)
 
     gt_text = substitute_equivalences(gt_text)
     ocr_text = substitute_equivalences(ocr_text)
@@ -103,7 +103,9 @@ def process(gt, ocr, report_prefix, *, metrics=True, gtlevel="region", ocrlevel=
 @click.option('--metrics/--no-metrics', default=True, help='Enable/disable metrics and green/red')
 @click.option('--gtlevel', default='region', help='Extraction level of the page-xml')
 @click.option('--ocrlevel', default='region', help='Extraction level of the page-xml')
-def main(gt, ocr, report_prefix, metrics, gtlevel, ocrlevel):
+@click.option('--gtindex', default='0', help='Selecting index for page-xml extraction')
+@click.option('--ocrindex', default='0', help='Selecting index for page-xml extraction')
+def main(gt, ocr, report_prefix, metrics, gtlevel, ocrlevel, gtindex, ocrindex):
     """
     Compare the PAGE/ALTO/text document GT against the document OCR.
 
@@ -112,7 +114,7 @@ def main(gt, ocr, report_prefix, metrics, gtlevel, ocrlevel):
     that case, use --no-metrics to disable the then meaningless metrics and also
     change the color scheme from green/red to blue.
     """
-    process(gt, ocr, report_prefix, metrics=metrics, gtlevel=gtlevel, ocrlevel=ocrlevel)
+    process(gt, ocr, report_prefix, metrics=metrics, gtlevel=gtlevel, ocrlevel=ocrlevel, gtindex=gtindex, ocrindex=ocrindex)
 
 
 if __name__ == '__main__':
