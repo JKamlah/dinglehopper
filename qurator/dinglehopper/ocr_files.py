@@ -64,8 +64,6 @@ def page_text(tree, level="region", index="0"):
 
     def line_text(region, index="0"):
         try:
-            for line in (region.findall('./page:TextLine/page:TextEquiv/page:Unicode', namespaces=nsmap)):
-                index = line.getparent().attrib.get('index','-1')
             return "\n".join([line.text for line in (region.findall('./page:TextLine/page:TextEquiv/page:Unicode', namespaces=nsmap))
                               if line is not None and line.getparent().attrib.get('index','-1') in ['-1', index]])
         except AttributeError:
