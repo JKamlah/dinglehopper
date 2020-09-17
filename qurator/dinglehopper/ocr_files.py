@@ -102,7 +102,12 @@ def page_text(tree, level="region"):
                 raise NotImplementedError
     else:
         for region in tree.iterfind('.//page:TextRegion', namespaces=nsmap):
-            region_texts.append(region_text(region))
+            if region is not None and level == "region":
+                region_texts.append(region_text(region))
+            elif region is not None and level == "line":
+                region_texts.append(line_text(region))
+            elif region is not None and level == "word":
+                region_texts.append(word_text(region))
 
     # XXX Does a file have to have regions etc.? region vs lines etc.
     # Filter empty region texts
